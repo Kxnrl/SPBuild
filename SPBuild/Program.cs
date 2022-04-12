@@ -14,6 +14,7 @@ namespace SPBuild
     {
         private static Regex Macher = new(@"^(.*)\((.+)\)\s:\s(.+)\s(\d+):(.*)$");
         private static Regex SRegex = new(@"[0-9]+(\ )bytes$");
+        private static Regex MainFileMacher = new(@"\s?//\s?MAIN_FILE\s+(.+)");
         private static string Worker = Environment.CurrentDirectory;
 
         static void Main(string[] args)
@@ -65,9 +66,10 @@ namespace SPBuild
                     var text = File.ReadAllLines(input);
                     for (var i = 0; i < 64 && i < text.Length; i++)
                     {
-                        if (text[i].StartsWith("// MAIN_FILE "))
+                        var match = MainFileMacher.Match(text[i]);
+                        if (match.Success && match.Groups.Count == 2)
                         {
-                            var main = text[i].Replace("// MAIN_FILE ", "").Trim();
+                            var main = match.Groups[1].Value;
                             input = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(input), main));
                             //Console.WriteLine($"try resolve: {main} to {input}");
                             resolved = true;

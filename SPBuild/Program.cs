@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,7 +17,7 @@ namespace SPBuild
         private static Regex MainFileMacher = new(@"\s?//\s?MAIN_FILE\s+(.+)");
         private static string Worker = Environment.CurrentDirectory;
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Init();
 
@@ -48,6 +48,10 @@ namespace SPBuild
 
             var resolved = false;
 
+            var output = args[1].Replace("\"", "");
+            if (File.Exists(output))
+                File.Delete(output);
+
             var input = args[0].Replace("\"", "");
 
         try_resolve:
@@ -73,6 +77,8 @@ namespace SPBuild
                             input = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(input), main));
                             //Console.WriteLine($"try resolve: {main} to {input}");
                             resolved = true;
+                            // override for main file
+                            output = Path.Combine(Path.GetDirectoryName(output), Path.GetFileName(main).Replace(".sp", ".smx"));
                             goto try_resolve;
                         }
                     }
@@ -81,10 +87,6 @@ namespace SPBuild
             }
 
             var baseDir = Path.GetDirectoryName(input); //+ @"\";
-
-            var output = args[1].Replace("\"", "");
-            if (File.Exists(output))
-                File.Delete(output);
 
             var dir = Path.GetDirectoryName(output);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))

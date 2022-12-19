@@ -25,6 +25,8 @@ namespace SPBuild
 
             var spcomp = Path.Combine(Worker, "spcomp.exe");
 
+            var spver = "1.10.0";
+
             try
             {
                 var path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? Worker, "spcomp.exe");
@@ -32,6 +34,9 @@ namespace SPBuild
                     File.WriteAllBytes(path, Properties.Resources.spcomp);
 
                 spcomp = path;
+
+                var versionInfo = FileVersionInfo.GetVersionInfo(path);
+                spver = versionInfo.FileVersion;
             }
             catch
             {
@@ -119,7 +124,8 @@ namespace SPBuild
 
             ColorText(ConsoleColor.Green, $"    {CON_BOLD}Compiling {CON_RESET}");
             ColorText(ConsoleColor.White, Path.GetFileNameWithoutExtension(input));
-            ColorText(ConsoleColor.DarkCyan, $" ({Path.GetDirectoryName(input)}){Environment.NewLine}", true);
+            ColorText(ConsoleColor.DarkCyan, $" ({Path.GetDirectoryName(input)})");
+            ColorText(ConsoleColor.DarkYellow, $" using SourcePawn {spver}{Environment.NewLine}", true);
 
             using var p = Process.Start(psi);
             var result = p.StandardOutput.ReadToEnd();
@@ -206,6 +212,8 @@ namespace SPBuild
 
             Console.Write(Environment.NewLine);
 
+            var errorLevel = 0;
+
             if (warnings > 0)
             {
                 ColorText(ConsoleColor.Yellow, $"{CON_BOLD}warning{CON_RESET}");
@@ -218,6 +226,7 @@ namespace SPBuild
                 ColorText(ConsoleColor.Red, $"{CON_BOLD}errors{CON_RESET}");
                 ColorText(ConsoleColor.White, $"{CON_BOLD}:{CON_RESET}");
                 ColorText(ConsoleColor.White, $" generated {errors} error", true);
+                errorLevel = 1;
             }
             else if (success)
             {
@@ -228,7 +237,7 @@ namespace SPBuild
             }
 
             //Console.ReadKey(true);
-            Environment.Exit(0);
+            Environment.Exit(errorLevel);
         }
 
         private static bool CheckFile(string data, string worker, out string sp)
